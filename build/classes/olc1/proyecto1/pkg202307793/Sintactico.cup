@@ -116,6 +116,8 @@ exportacion ::=
     {: System.out.println("exportación de BD: " + ((String)STRING_LITERAL)); :}
   ;
 
+//PARA DEFINIR LAS
+
 /* ================= EXPRESIONES ================= */
 expresion ::=
     expresion:a IGUAL       expresion:b   {: RESULT = (a.equals(b)) ? 1.0 : 0.0; :}
