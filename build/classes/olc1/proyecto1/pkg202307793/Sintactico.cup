@@ -1,0 +1,61 @@
+package olc1.proyecto1.pkg202307793;
+import java_cup.runtime.*;
+
+/* ================= TERMINALES ================= */
+terminal String PTCOMA, PARIZQ, PARDER, CORIZQ, CORDER, LLAIZQ, LLADER;
+terminal String IGUAL, DIFERENTE, MAYOR, MENOR, MAYORIGUAL, MENORIGUAL;
+terminal String AND, OR, NOT;
+terminal String ENTERO, DECIMAL, ID, STRING_LITERAL;
+terminal String TRUE, FALSE;
+terminal String INT, FLOAT, BOOL, STRING, ARRAY, OBJECT, NULL;
+terminal String DATABASE, USE, TABLE, READ, FIELDS, FILTER, STORE, AT, EXPORT;
+terminal String ADD, UPDATE, SET, CLEAR;
+terminal String REVALUAR;
+
+/* ================= NO TERMINALES ================= */
+non terminal ini;
+non terminal instrucciones;
+non terminal instruccion;
+non terminal Double expresion;
+
+/* ================= PRECEDENCIA ================= */
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+precedence nonassoc IGUAL, DIFERENTE, MAYOR, MENOR, MAYORIGUAL, MENORIGUAL;
+
+/* ================= INICIO ================= */
+start with ini;
+
+ini ::= instrucciones;
+
+instrucciones ::=
+    instruccion instrucciones
+  | instruccion
+  ;
+
+instruccion ::=
+    REVALUAR CORIZQ expresion:a CORDER PTCOMA
+    {: System.out.println("El valor de la expresión es: " + a); :}
+  ;
+
+/* ================= EXPRESIONES ================= */
+expresion ::=
+    expresion:a IGUAL       expresion:b   {: RESULT = (a.equals(b)) ? 1.0 : 0.0; :}
+  | expresion:a DIFERENTE   expresion:b   {: RESULT = (!a.equals(b)) ? 1.0 : 0.0; :}
+  | expresion:a MAYOR       expresion:b   {: RESULT = (a > b) ? 1.0 : 0.0; :}
+  | expresion:a MENOR       expresion:b   {: RESULT = (a < b) ? 1.0 : 0.0; :}
+  | expresion:a MAYORIGUAL  expresion:b   {: RESULT = (a >= b) ? 1.0 : 0.0; :}
+  | expresion:a MENORIGUAL  expresion:b   {: RESULT = (a <= b) ? 1.0 : 0.0; :}
+  | expresion:a AND         expresion:b   {: RESULT = ((a==1.0 && b==1.0)?1.0:0.0); :}
+  | expresion:a OR          expresion:b   {: RESULT = ((a==1.0 || b==1.0)?1.0:0.0); :}
+  | NOT expresion:a                        {: RESULT = (a==1.0)?0.0:1.0; :}
+  | ENTERO:a                               {: RESULT = Double.parseDouble(a); :}
+  | DECIMAL:a                              {: RESULT = Double.parseDouble(a); :}
+  | ID:a                                   {: RESULT = 0.0; /* aquí podrías manejar variables */ :}
+  | STRING_LITERAL:a                       {: RESULT = 0.0; /* cadenas no se evalúan numéricamente */ :}
+  | TRUE                                   {: RESULT = 1.0; :}
+  | FALSE                                  {: RESULT = 0.0; :}
+  | PARIZQ expresion:a PARDER              {: RESULT = a; :}
+  ;
+
