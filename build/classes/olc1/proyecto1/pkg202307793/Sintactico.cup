@@ -11,19 +11,54 @@ terminal String INT, FLOAT, BOOL, STRING, ARRAY, OBJECT, NULL;
 terminal String DATABASE, USE, TABLE, READ, FIELDS, FILTER, STORE, AT, EXPORT;
 terminal String ADD, UPDATE, SET, CLEAR;
 terminal String REVALUAR;
+terminal String COMA, DOSPUNTOS, IGUAL_SIMPLE;
+
 
 /* ================= NO TERMINALES ================= */
 non terminal programa;
 non terminal instruccion;
 non terminal listaInstrucciones;
+
 non terminal definicionDB;
+non terminal storeDecl;
+non terminal instruccionUse;
+
 non terminal definicionTabla;
+non terminal listaCamposTabla;
+non terminal campo;
+non terminal tipoDato;
+
 non terminal lectura;
-non terminal insercion;
-non terminal actualizacion;
-non terminal eliminacion;
+non terminal cuerpoLectura;
+non terminal seccionCampos;
+non terminal listaCamposRead;
+non terminal MASCampos;
+non terminal seccionFiltroRead;
+
 non terminal exportacion;
-non terminal expresion;
+
+non terminal insercion;
+non terminal listaAsignaciones;
+non terminal MASAsignaciones;
+non terminal asignacion;
+non terminal valor;
+non terminal listaValores;
+non terminal MASValores;
+
+non terminal actualizacion;
+non terminal cuerpoActualizacion;
+non terminal seccionCamposActualizar;
+non terminal listaCamposActualizar;
+non terminal MASCamposACtualizar;
+non terminal campoActualizar;
+non terminal seccionFiltroActualizar;
+
+non terminal eliminacion;
+
+non terminal Double expresion;
+
+
+
 
 
 /* ================= PRECEDENCIA ================= */
@@ -33,7 +68,8 @@ precedence right NOT;
 precedence nonassoc IGUAL, DIFERENTE, MAYOR, MENOR, MAYORIGUAL, MENORIGUAL;
 
 /* ================= INICIO ================= */
-start with ini;
+start with programa;
+
 
 programa ::= listaInstrucciones ;
 
@@ -43,34 +79,50 @@ listaInstrucciones ::=
   | instruccion
   ;
 
-definicionDB ::=
-    DATABASE ID LLAIZQ storeDecl LLADER
-    {: System.out.println("Definición de base de datos: " + ((String)ID)); :}
+instruccion ::=
+    definicionDB
+  | instruccionUse
+  | definicionTabla
+  | lectura
+  | insercion
+  | actualizacion
+  | eliminacion
+  | exportacion
   ;
+
+
+definicionDB ::=
+    DATABASE ID:nombre LLAIZQ storeDecl:s LLADER
+    {: System.out.println("Definición de base de datos: " + nombre); :}
+;
+
 
 storeDecl ::=
-    STORE AT STRING_LITERAL PTCOMA
-    {: System.out.println("Ruta de persistencia: " + ((String)STRING_LITERAL)); :}
-  ;
+    STORE AT STRING_LITERAL:ruta PTCOMA
+    {: System.out.println("Ruta de persistencia: " + ruta); :}
+;
+
 
 instruccionUse ::=
-    USE ID PTCOMA
-    {: System.out.println("Usando base de datos: " + ((String)ID)); :}
+    USE ID:nombre PTCOMA
+    {: System.out.println("Usando base de datos: " + nombre); :}
   ;
 
 //PARA DEFINIR LAS TABLAS
 definicionTabla ::=
-    TABLE ID LLAIZQ listaCampos LLADER
-    {: System.out.println("Definición de tabla: " + ((String)ID)); :}
+    TABLE ID:nombre LLAIZQ listaCamposTabla LLADER
+    {: System.out.println("Definición de tabla: " + nombre); :}
   ;
-listaCampos ::=
-    campo listaCampos
+listaCamposTabla ::=
+    campo listaCamposTabla
   | campo
   ;
+
 campo ::=
-    ID PTCOMA tipoDato PTCOMA
-    {: System.out.println("Campo: " + ((String)ID) + " Tipo: " + ((String)tipoDato)); :}
-  ;
+    ID:nombre PTCOMA tipoDato:td PTCOMA
+    {: System.out.println("Campo: " + nombre + " Tipo: " + td); :}
+;
+
 tipoDato ::=
     INT     {: RESULT = "int"; :}
   | FLOAT   {: RESULT = "float"; :}
@@ -83,21 +135,20 @@ tipoDato ::=
 
 //PARA DEFINIR LAS READ
 lectura ::=
-    READ ID LLAIZQ cuerpoLectura LLADER
-    {: System.out.println("Lectura de tabla: " + ((String)ID)); :}
+    READ ID:nombre LLAIZQ cuerpoLectura LLADER
+    {: System.out.println("Lectura de tabla: " + nombre); :}
   ;
 cuerpoLectura ::=
-    seccionCampos seccionFiltro
+    seccionCampos seccionFiltroRead
   | seccionCampos
   ;
 seccionCampos ::=
-    FIELDS DOSPUNTOS listaCampos PTCOMA
+    FIELDS DOSPUNTOS listaCamposRead PTCOMA
     {: System.out.println("Campos seleccionados"); :}
   ;
 
-listaCampos ::=
+listaCamposRead ::=
     ID MASCampos
-  | ASTERISCO
   ;
 
 MASCampos ::=
@@ -105,18 +156,89 @@ MASCampos ::=
   | /* vacío */
   ;
 
-seccionFiltro ::=
+seccionFiltroRead ::=
     FILTER DOSPUNTOS expresion PTCOMA
     {: System.out.println("Filtro aplicado"); :}
   ;
 
 //PARA DEFINIR LAS EXPORT
 exportacion ::=
-    EXPORT STRING_LITERAL PTCOMA
-    {: System.out.println("exportación de BD: " + ((String)STRING_LITERAL)); :}
+    EXPORT STRING_LITERAL:nombreArchivo PTCOMA
+    {: System.out.println("exportación de BD: " + nombreArchivo); :}
   ;
 
-//PARA DEFINIR LAS
+//PARA DEFINIR LA INSERCION
+insercion ::=
+    ADD ID:nombre LLAIZQ listaAsignaciones LLADER PTCOMA
+    {: System.out.println("Agregar registro: " + nombre); :}
+  ;
+
+listaAsignaciones ::=
+    asignacion MASAsignaciones
+  ;
+
+MASAsignaciones ::=
+    COMA asignacion MASAsignaciones
+  | /* vacío */
+  ;
+
+asignacion ::=
+    ID:a DOSPUNTOS valor:v
+    {: System.out.println("Campo: " + a + " Valor: " + v); :}
+;
+
+
+valor ::=
+    ENTERO:e           {: RESULT = e; :}
+  | DECIMAL:d          {: RESULT = d; :}
+  | STRING_LITERAL:s   {: RESULT = s; :}
+  | TRUE               {: RESULT = "true"; :}
+  | FALSE              {: RESULT = "false"; :}
+  | NULL               {: RESULT = "null"; :}
+  | CORIZQ listaValores:l CORDER {: RESULT = "array"; :}
+  | LLAIZQ listaAsignaciones:o LLADER {: RESULT = "object"; :}
+;
+
+
+//PARA DEFINIR LA ACTUALIZACIÓN
+actualizacion ::=
+    UPDATE ID:nombre LLAIZQ cuerpoActualizacion LLADER PTCOMA
+    {: System.out.println("Actualización en tabla: " + nombre); :}
+  ;
+
+cuerpoActualizacion ::=
+    seccionCamposActualizar seccionFiltroActualizar
+  | seccionCamposActualizar
+  ;
+
+seccionCamposActualizar ::=
+    SET DOSPUNTOS listaCamposActualizar PTCOMA
+  ;
+listaCamposActualizar ::=
+    campoActualizar MASCamposACtualizar
+  ;
+
+MASCamposACtualizar ::=
+    COMA campoActualizar MASCamposACtualizar
+  | /* vacío */
+  ;
+
+campoActualizar ::=
+    ID:nombre IGUAL_SIMPLE valor:v
+    {: System.out.println("Actualizar campo: " + nombre + " = " + v); :}
+  ;
+
+seccionFiltroActualizar ::=
+    FILTER DOSPUNTOS expresion PTCOMA
+    {: System.out.println("Filtro aplicado"); :}
+  ;
+
+//PARA DEFINIR LA ELIMINACIÓN DE TODOS LOS REGISTROS DE UNA TABLA
+eliminacion ::=
+    CLEAR ID:nombre PTCOMA
+    {: System.out.println("Eliminación de registros completos en tabla: " + nombre); :}
+  ;
+
 
 /* ================= EXPRESIONES ================= */
 expresion ::=

@@ -5,13 +5,12 @@
         <group>
             <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/olc1/proyecto1/pkg202307793/OLC1PROYECTO1202307793.java</file>
             <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/olc1/proyecto1/pkg202307793/Lexico.jflex</file>
-            <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/Clases/token.java</file>
-            <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/Clases/errorLexico.java</file>
             <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/Interfaz/interfazInicial.java</file>
-            <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/olc1/proyecto1/pkg202307793/Lexico.java</file>
             <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/olc1/proyecto1/pkg202307793/Sintactico.cup</file>
             <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/olc1/proyecto1/pkg202307793/compilar.bat</file>
             <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/olc1/proyecto1/pkg202307793/Sintactico.java</file>
+            <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/controladores/controladorInterfaz.java</file>
+            <file>file:/C:/Users/Rony/Documents/NetBeansProjects/OLC1-PROYECTO1-202307793/src/olc1/proyecto1/pkg202307793/Lexico.java</file>
         </group>
     </open-files>
 </project-private>

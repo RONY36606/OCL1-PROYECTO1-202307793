@@ -189,6 +189,20 @@ CADENA  = \"([^\"\\]|\\.)*\"
     return new Symbol(sym.PTCOMA, (int)yyline, (int)yychar, yytext());
 }
 
+"," {
+    token t = new token("COMA", yytext(), (int)yyline, (int)yychar);
+    listaTokens.add(t);
+    System.out.println("Simbolo reconocido: " + yyline + (int) yychar + yytext());
+    return new Symbol(sym.COMA, (int)yyline, (int)yychar, yytext());
+}
+
+":" {
+    token t = new token("DOSPUNTOS", yytext(), (int)yyline, (int)yychar);
+    listaTokens.add(t);
+    System.out.println("Simbolo reconocido: " + yyline + (int) yychar + yytext());
+    return new Symbol(sym.DOSPUNTOS, (int)yyline, (int)yychar, yytext());
+}
+
 "(" {
     token t = new token("PARIZQ", yytext(), (int)yyline, (int)yychar);
     listaTokens.add(t);
@@ -231,11 +245,19 @@ CADENA  = \"([^\"\\]|\\.)*\"
 }
 
 // ================= OPERADORES RELACIONALES=================
+
 "==" {
     token t = new token("IGUAL", yytext(), (int)yyline, (int)yychar);
     listaTokens.add(t);
     System.out.println("Operador reconocido: " + yyline + " - " + yychar + " -> " + yytext());
     return new Symbol(sym.IGUAL, (int)yyline, (int)yychar, yytext());
+}
+
+"=" {
+    token t = new token("IGUAL_SIMPLE", yytext(), (int)yyline, (int)yychar);
+    listaTokens.add(t);
+    System.out.println("Operador reconocido: " + yyline + " - " + yychar + " -> " + yytext());
+    return new Symbol(sym.IGUAL_SIMPLE, (int)yyline, (int)yychar, yytext());
 }
 
 "!=" {
