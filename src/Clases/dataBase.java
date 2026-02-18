@@ -15,7 +15,7 @@ import java.util.Map;
 public class dataBase {
     String nombre;
     String filePath;
-    Map<String, Tabla> tables = new HashMap<>(); 
+    Map<String, Tabla> tablas = new HashMap<>(); 
     public dataBase(String name, String filePath) { 
         this.nombre = name; 
         this.filePath = filePath; 
