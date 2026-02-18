@@ -18,6 +18,19 @@ import Clases.errorLexico;
 %{
     LinkedList<errorLexico> listaErrores = new LinkedList<>();
     LinkedList<token> listaTokens = new LinkedList<>();
+    public LinkedList<token> getTokens() {
+        return listaTokens;
+    }
+
+    public LinkedList<errorLexico> getErrores() {
+        return listaErrores;
+    }
+
+    public void limpiarListas() {
+        listaTokens.clear();
+        listaErrores.clear();
+    }
+
 %}
 
 %init{
@@ -38,7 +51,7 @@ CADENA  = \"([^\"\\]|\\.)*\"
     token t = new token("REVALUAR", yytext(), (int)yyline, (int)yychar);
     listaTokens.add(t);
     System.out.println("Palabra reservada reconocida: " + yyline +  " - " + yychar + " ->> " +  yytext());
-    return new Symbol(sym.REVALUAR, (int)yyline, (int)yychar, yytext()); 
+    return new Symbol(sym.REVALUAR, (int)yyline, (int)yychar+1, yytext()); 
 }
 "int" {
     token t = new token("INT", yytext(), (int)yyline, (int)yychar);
@@ -378,7 +391,7 @@ CADENA  = \"([^\"\\]|\\.)*\"
 
 . {
     errorLexico e = new errorLexico(yytext(), (int)yyline, (int)yychar, "Símbolo no reconocido");
-    //listaErrores.add(E    );
+    listaErrores.add(e);
     System.out.println(
         "Error Léxico: " + yytext() +
         " en línea: " + yyline +

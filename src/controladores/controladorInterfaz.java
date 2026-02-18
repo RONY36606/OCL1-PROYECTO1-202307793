@@ -3,9 +3,20 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package controladores;
+import Clases.errorLexico;
+import Clases.token;
 import java.io.*;
 import javax.swing.*;
+//imports de la interfaz, linked list y de la tabla, para los reportes
 import Interfaz.interfazInicial;
+import java.util.LinkedList;
+import javax.swing.table.DefaultTableModel;
+//import del lexer
+import olc1.proyecto1.pkg202307793.Lexico;
+import olc1.proyecto1.pkg202307793.Sintactico;
+//import de sym, necesario
+import olc1.proyecto1.pkg202307793.sym;
+
 
 /**
  *
@@ -26,6 +37,7 @@ public class controladorInterfaz {
         vista.crear_archivo_btn.addActionListener(e -> crearNuevoArchivo());
         vista.guardar_archivo_btn.addActionListener(e -> guardarArchivo());
         vista.abrir_archivo_btn.addActionListener(e -> abrirArchivo());
+        vista.tokens_btn.addActionListener(e -> generarReporte());
     }
 
     private void crearNuevoArchivo() {
@@ -82,6 +94,48 @@ public class controladorInterfaz {
                 }
             }
         }
+        
+    //Opción para generar los reportes
+      private void generarReporte(){
+          try{
+          //tomar el programa fuente
+          String entrada = vista.entrada_programa.getText();
+          Reader reader = new StringReader(entrada);
+          //llamar al lexer
+          //solo acepta datos de tipo StringReader
+          Lexico lexer  = new Lexico(reader);
+          //llamamos al parser a partir del lexer
+          Sintactico parser = new Sintactico(lexer);
+          //Iterar los tokens
+          while (lexer.next_token().sym != sym.EOF){
+          
+          }
+          
+          //tomar las listas que dejamos en el jflex
+          LinkedList<token> tokens = lexer.getTokens(); 
+          LinkedList<errorLexico> errores = lexer.getErrores();
+          
+          // Llenar tabla de tokens 
+          int contador = 0;
+          DefaultTableModel modeloTokens = (DefaultTableModel) vista.tablaTokens.getModel(); 
+          modeloTokens.setRowCount(0);//limpiamos la tabla antes de llenarla xd 
+          for (token t : tokens) { 
+              modeloTokens.addRow(new Object[]{ contador, t.getTipo(), t.getLexema(), t.getLinea(), t.getColumna() });
+              contador++;
+          } 
+          // Llenar tabla de errores 
+          contador =0;
+          DefaultTableModel modeloErrores = (DefaultTableModel) vista.tablaErrores.getModel();
+          modeloErrores.setRowCount(0); // limpiar la tabla antes de llenarla xd
+          for (errorLexico e : errores) { 
+              modeloErrores.addRow(new Object[]{ contador, e.getLexema(), e.getLinea(), e.getColumna(), e.getDescripcion() }); 
+              contador++;
+          }
+          }catch(Exception ex){
+              JOptionPane.showMessageDialog(vista, "Error en el análisis léxico :( : " + ex.getMessage());
+          }
+          
+      }
 
 
 

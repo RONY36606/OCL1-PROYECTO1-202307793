@@ -44,9 +44,9 @@ public class interfazInicial extends javax.swing.JFrame {
         errores_btn = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane5 = new javax.swing.JScrollPane();
-        tablaTokens = new javax.swing.JTable();
+        tablaErrores = new javax.swing.JTable();
         jScrollPane6 = new javax.swing.JScrollPane();
-        tablaTokens1 = new javax.swing.JTable();
+        tablaTokens = new javax.swing.JTable();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
 
@@ -97,7 +97,7 @@ public class interfazInicial extends javax.swing.JFrame {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Salida:");
 
-        tablaTokens.setModel(new javax.swing.table.DefaultTableModel(
+        tablaErrores.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null},
                 {null, null, null, null, null},
@@ -108,9 +108,9 @@ public class interfazInicial extends javax.swing.JFrame {
                 "#", "Tipo", "Descripción", "Línea", "Columna"
             }
         ));
-        jScrollPane5.setViewportView(tablaTokens);
+        jScrollPane5.setViewportView(tablaErrores);
 
-        tablaTokens1.setModel(new javax.swing.table.DefaultTableModel(
+        tablaTokens.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null},
                 {null, null, null, null, null},
@@ -121,7 +121,7 @@ public class interfazInicial extends javax.swing.JFrame {
                 "#", "Lexema", "Tipo", "Línea", "Columna"
             }
         ));
-        jScrollPane6.setViewportView(tablaTokens1);
+        jScrollPane6.setViewportView(tablaTokens);
 
         jLabel2.setFont(new java.awt.Font("Nirmala UI Semilight", 1, 18)); // NOI18N
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -279,8 +279,8 @@ public class interfazInicial extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
+    public javax.swing.JTable tablaErrores;
     public javax.swing.JTable tablaTokens;
-    public javax.swing.JTable tablaTokens1;
     public javax.swing.JButton tokens_btn;
     // End of variables declaration//GEN-END:variables
 }
