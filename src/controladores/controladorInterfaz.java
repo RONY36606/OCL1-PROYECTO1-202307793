@@ -37,7 +37,7 @@ public class controladorInterfaz {
         vista.crear_archivo_btn.addActionListener(e -> crearNuevoArchivo());
         vista.guardar_archivo_btn.addActionListener(e -> guardarArchivo());
         vista.abrir_archivo_btn.addActionListener(e -> abrirArchivo());
-        vista.tokens_btn.addActionListener(e -> generarReporte());
+        vista.ejecutar_btn.addActionListener(e -> EjecutarProgramaYgenerarReportes());
     }
 
     private void crearNuevoArchivo() {
@@ -96,7 +96,7 @@ public class controladorInterfaz {
         }
         
     //Opción para generar los reportes
-      private void generarReporte(){
+      private void EjecutarProgramaYgenerarReportes(){
           try{
           //tomar el programa fuente
           String entrada = vista.entrada_programa.getText();
