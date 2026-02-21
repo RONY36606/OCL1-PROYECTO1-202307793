@@ -18,10 +18,17 @@ public class gestorBD {
     private dataBase baseActual;
     //Objeto Gson para convertir a JSON
     private Gson gson = new Gson();
+    //ultimo read visto
+    private List<Map<String,Object>> ultimaLectura = new ArrayList<>();
+    //geter
+    public List<Map<String,Object>> getUltimaLectura() {
+            return ultimaLectura;
+    }   
 
     // Crear base de datos
     public void crearBaseDeDatos(String nombre, String ruta) {
-        dataBase db = new dataBase(nombre, ruta);
+        String rutaLimpia = ruta.replace("\"", "");
+        dataBase db = new dataBase(nombre, rutaLimpia);
         bases.put(nombre, db); //al crear una nueva bd, la metemos en nuestros registros cawn
         baseActual = db;
         guardar(db);
@@ -48,7 +55,16 @@ public class gestorBD {
     public void insertarRegistro(String nombreTabla, Map<String,Object> fila) {
         Tabla t = baseActual.tablas.get(nombreTabla);
         if (t != null) {
-            t.rows.add(fila); //si la tabla existe, le podemos añadir la fila nueva con el registro
+            // Limpiar comillas de todos los valores string
+            Map<String,Object> filaLimpia = new HashMap<>();
+            for (Map.Entry<String,Object> entry : fila.entrySet()) {
+                Object valor = entry.getValue();
+                if (valor instanceof String) {
+                    valor = ((String) valor).replace("\"", "");
+                }
+                filaLimpia.put(entry.getKey(), valor);
+            }
+            t.rows.add(filaLimpia); //si la tabla existe, le podemos añadir la fila nueva con el registro
             guardar(baseActual);//SIEMPRE, guardamos los cambios
         }
     }
@@ -64,6 +80,7 @@ public class gestorBD {
                 }
             }
         }
+        ultimaLectura = resultado;
         return resultado;
     }
 
@@ -98,11 +115,17 @@ public class gestorBD {
 
     // Exportar resultados o consultas
     public void exportar(String nombreArchivo, List<Map<String,Object>> datos) {
+        String nombreLimpio = nombreArchivo.replace("\"", "");
         try (FileWriter writer = new FileWriter(nombreArchivo)) {
             gson.toJson(datos, writer); //convertimos la lista de resultados a JSON
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    //Exportar sin datos
+    public void exportar(String nombreArchivo) {
+        String nombreLimpio = nombreArchivo.replace("\"", "");
+        exportar(nombreLimpio, ultimaLectura);
     }
 
     // Guardar base de datos completa en JSON, siempre ir refrescando

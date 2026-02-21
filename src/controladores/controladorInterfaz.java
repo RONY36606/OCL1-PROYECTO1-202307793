@@ -106,6 +106,17 @@ public class controladorInterfaz {
           Lexico lexer  = new Lexico(reader);
           //llamamos al parser a partir del lexer
           Sintactico parser = new Sintactico(lexer);
+          // Ejecutar el parser (esto dispara las acciones semánticas) 
+          parser.parse();
+          //mostrar los errores sintácticos, si es que hay
+            if (!parser.erroresSintacticos.isEmpty()) {
+                StringBuilder sb = new StringBuilder("Será imposible exportar la base de datos o consultas, ya que hay errores sintácticos encontrados:\n\n");
+                for (String error : parser.erroresSintacticos) {
+                    sb.append("• ").append(error).append("\n");
+                }
+                JOptionPane.showMessageDialog(vista, sb.toString(), 
+                    "Errores Sintácticos", JOptionPane.ERROR_MESSAGE);
+            }
           //Iterar los tokens
           while (lexer.next_token().sym != sym.EOF){
           
@@ -131,6 +142,8 @@ public class controladorInterfaz {
               modeloErrores.addRow(new Object[]{ contador, e.getLexema(), e.getLinea(), e.getColumna(), e.getDescripcion() }); 
               contador++;
           }
+          JOptionPane.showMessageDialog(vista, "Archivo ejecutado :)");
+          vista.entrada_programa.setText(vista.entrada_programa.getText()+"\n"+"Archivo eli ejecutado con éxito --->");
           }catch(Exception ex){
               JOptionPane.showMessageDialog(vista, "Error en el análisis léxico :( : " + ex.getMessage());
           }

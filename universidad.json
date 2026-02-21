@@ -1,0 +1,1 @@
+{"nombre":"universidad","filePath":"universidad.json","tablas":{"profesores":{"name":"profesores","rows":[{"salario":"1500.50","departamento":"\"Matemáticas\"","id":"1","nombre":"\"Carlos\""}],"columnas":[{},{},{},{}]},"estudiantes":{"name":"estudiantes","rows":[],"columnas":[{},{},{}]}}}

@@ -8,12 +8,33 @@ import Clases.camposInfo;
 import Clases.filtroInfo;
 import Clases.lecturaInfo;
 import Clases.actualizacionInfo;
+import Clases.gestorBD;
+import java.util.LinkedList;
 
 // ====== SECCIÓN DE CÓDIGO GLOBAL ======
-parser code {
+parser code {:
     // Declaramos el gestor de la BD
     public static gestorBD gestor = new gestorBD();
-}
+ // Lista para acumular errores sintácticos
+    public java.util.LinkedList<String> erroresSintacticos = new java.util.LinkedList<>();
+
+    // Manejo de errores mejorado
+    public void report_error(String message, Object info) {
+        System.err.println("ERROR SINTÁCTICO: " + message);
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
+            String error = "Error sintáctico en línea: " + s.left + 
+                         " columna: " + s.right + 
+                         " token: " + sym.terminalNames[s.sym];
+            erroresSintacticos.add(error);
+            System.err.println(error);
+        }
+    }
+
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+    }
+:}
 
 /* ================= TERMINALES ================= */
 terminal String PTCOMA, PARIZQ, PARDER, CORIZQ, CORDER, LLAIZQ, LLADER;
@@ -29,50 +50,48 @@ terminal String COMA, DOSPUNTOS, IGUAL_SIMPLE;
 
 
 /* ================= NO TERMINALES ================= */
+
 non terminal programa;
 non terminal instruccion;
 non terminal listaInstrucciones;
 
 non terminal definicionDB;
-non terminal storeDecl;
+non terminal String storeDecl;
 non terminal instruccionUse;
 
 non terminal definicionTabla;
-non terminal listaCamposTabla;
-non terminal campo;
-non terminal tipoDato;
+non terminal List listaCamposTabla;
+non terminal Map.Entry campo;
+non terminal String tipoDato;
 
-non terminal lectura;
-non terminal cuerpoLectura;
-non terminal seccionCampos;
-non terminal listaCamposRead;
-non terminal MASCampos;
-non terminal seccionFiltroRead;
+non terminal List lectura;
+non terminal lecturaInfo cuerpoLectura;
+non terminal camposInfo seccionCampos;
+non terminal List listaCamposRead;
+non terminal List MASCampos;
+non terminal filtroInfo seccionFiltroRead;
 
 non terminal exportacion;
 
 non terminal insercion;
-non terminal listaAsignaciones;
-non terminal MASAsignaciones;
-non terminal asignacion;
-non terminal valor;
-non terminal listaValores;
-non terminal MASValores;
+non terminal List listaAsignaciones;
+non terminal List MASAsignaciones;
+non terminal Map.Entry asignacion;
+non terminal Object valor;
+non terminal List listaValores;
+non terminal List MASValores;
 
 non terminal actualizacion;
-non terminal cuerpoActualizacion;
-non terminal seccionCamposActualizar;
-non terminal listaCamposActualizar;
-non terminal MASCamposACtualizar;
-non terminal campoActualizar;
-non terminal seccionFiltroActualizar;
+non terminal actualizacionInfo cuerpoActualizacion;
+non terminal List seccionCamposActualizar;
+non terminal List listaCamposActualizar;
+non terminal List MASCamposACtualizar;
+non terminal Map.Entry campoActualizar;
+non terminal filtroInfo seccionFiltroActualizar;
 
 non terminal eliminacion;
 
 non terminal Double expresion;
-
-
-
 
 
 /* ================= PRECEDENCIA ================= */
@@ -105,18 +124,24 @@ instruccion ::=
   ;
 
 
+
 definicionDB ::=
     DATABASE ID:nombre LLAIZQ storeDecl:s LLADER
-    {: gestor.crearBaseDeDatos(nombre, s); :}
-    {: System.out.println("Definición de base de datos: " + nombre); :}
+    {:
+        gestor.crearBaseDeDatos(nombre, s);
+        System.out.println("Definición de base de datos: " + nombre);
+    :}
 ;
+
 
 
 storeDecl ::=
     STORE AT STRING_LITERAL:ruta PTCOMA
-    {: System.out.println("Ruta de persistencia: " + ruta); :}
-    //para crear la ruta
-    {: RESULT = ruta; :}
+    {:
+        System.out.println("Ruta de persistencia: " + ruta);
+        //para crear la ruta
+        RESULT = ruta;
+    :}
 ;
 
 
@@ -132,37 +157,37 @@ instruccionUse ::=
 //==============================================PARA DEFINIR LAS TABLAS==============================================
 definicionTabla ::=
     TABLE ID:nombre LLAIZQ listaCamposTabla:campos LLADER
-    {: 
-        
-        System.out.println("Definición de tabla: " + nombre); 
-        //para crear la tabla dentro de la BD
+    {:
+        System.out.println("Definición de tabla: " + nombre);
         gestor.crearTabla(nombre, campos);
     :}
-  ;
+;
+
 listaCamposTabla ::=
     campo:c listaCamposTabla:resto
     {:
-        //acumulamos los campos en una lista
-        List<Map.Entry<String,String>> lista = new ArrayList<>();
+        List<Map.Entry<String,Object>> lista = new ArrayList<>();
         lista.add(c);
         lista.addAll(resto);
         RESULT = lista;
     :}
   | campo:c
     {:
-        //lista con un solo campo en ella
-        List<Map.Entry<String,String>> lista = new ArrayList<>();
+        List<Map.Entry<String,Object>> lista = new ArrayList<>();
         lista.add(c);
         RESULT = lista;
     :}
-  ;
+;
+
 
 campo ::=
-    ID:nombre PTCOMA tipoDato:td PTCOMA
-    {: System.out.println("Campo: " + nombre + " Tipo: " + td);
+    ID:nombre DOSPUNTOS tipoDato:td PTCOMA
+    {:
+        System.out.println("Campo: " + nombre + " Tipo: " + td);
         RESULT = new AbstractMap.SimpleEntry<>(nombre, td);
-     :}
+    :}
 ;
+
 
 tipoDato ::=
     INT     {: RESULT = "int"; :}
@@ -176,7 +201,7 @@ tipoDato ::=
 
 //==============================================PARA DEFINIR LAS READ==============================================
 lectura ::=
-    READ ID:nombre LLAIZQ cuerpoLectura:cl LLADER
+    READ ID:nombre LLAIZQ cuerpoLectura:cl LLADER PTCOMA
     {: 
         System.out.println("Lectura de tabla: " + nombre); 
         //la función de lectura entra acá
@@ -189,26 +214,27 @@ lectura ::=
 
         //guardar el resultado en RESULT para poder usarlo en export
         RESULT = resultado;
-    
     :}
   ;
+
 cuerpoLectura ::=
     seccionCampos:sc seccionFiltroRead:sf
     {:
         //devolvemos un objeto con campos y filtro
-        RESULT = new LecturaInfo(sc.campos, sf.campoFiltro, sf.valorFiltro); //esta clase se implementará en Clases
+        RESULT = new lecturaInfo(sc.campos, sf.campo, sf.valor);
     :}
   | seccionCampos:sc
     {:
         //sin filtro, devolvemos solo campos
-        RESULT = new LecturaInfo(sc.campos, null, null);
+        RESULT = new lecturaInfo(sc.campos, null, null);
     :}
   ;
+
 seccionCampos ::=
     FIELDS DOSPUNTOS listaCamposRead:lc PTCOMA
     {:
         System.out.println("Campos seleccionados: " + lc);
-        RESULT = new CamposInfo(lc);
+        RESULT = new camposInfo(lc);
     :}
   ;
 
@@ -244,17 +270,18 @@ seccionFiltroRead ::=
     {:
         //tomamos el filtro a aplicar
         System.out.println("Filtro aplicado: " + e);
-        RESULT = new FiltroInfo(e.campo, e.valor);
+        // expresion retorna Double, se pasa directamente a filtroInfo
+        RESULT = new filtroInfo(null, e);
     :}
   ;
 
 //====================================PARA DEFINIR LAS EXPORT==============================================
 exportacion ::=
-    EXPORT STRING_LITERAL:nombreArchivo PTCOMA lectura:datos
-    {: System.out.println("exportación de BD: " + nombreArchivo); 
-        //para exportar un archivo
-        //en RESULT se nos devuelve la lista de registros
-        gestor.exportar(nombreArchivo, datos);
+    EXPORT STRING_LITERAL:nombreArchivo PTCOMA
+    {:
+        System.out.println("exportación de BD: " + nombreArchivo); 
+        //exportamos usando la última lectura guardada en el gestor
+        gestor.exportar(nombreArchivo);
     :}
   ;
 
@@ -265,7 +292,8 @@ insercion ::=
         System.out.println("Agregar registro: " + nombre);
         // Creamos un mapa para la fila, para ver los valores que entran en determinada fila
         Map<String,Object> fila = new HashMap<>();
-        for (Map.Entry<String,Object> entry : campos) {
+        for (Object obj : campos) {
+            Map.Entry<String,Object> entry = (Map.Entry<String,Object>) obj;
             fila.put(entry.getKey(), entry.getValue());
         }
         //llamar al gestor para insertar una nueva fila
@@ -277,7 +305,7 @@ listaAsignaciones ::=
     asignacion:a MASAsignaciones:resto
     {:
         //acumulamos los campos en una lista
-        List<Map.Entry<String,String>> lista = new ArrayList<>();
+        List<Map.Entry<String,Object>> lista = new ArrayList<>();
         lista.add(a);
         lista.addAll(resto);
         RESULT = lista;
@@ -302,7 +330,8 @@ MASAsignaciones ::=
 
 asignacion ::=
     ID:a DOSPUNTOS valor:v
-    {: System.out.println("Campo: " + a + " Valor: " + v); 
+    {:
+        System.out.println("Campo: " + a + " Valor: " + v); 
         //devolvemos un par campo-valor
         //Esta es la mínima forma para asignar algún valor
         RESULT = new AbstractMap.SimpleEntry<>(a, v);
@@ -322,14 +351,42 @@ valor ::=
         //convertimos lista de asignaciones en un mapa
         Map<String,Object> obj = new HashMap<>();
         //recorremos la lista de asignaciones y la vamos metiendo dentro de obj
-        for (Map.Entry<String,Object> entry : o) {
+        for (Object item : o) {
+            Map.Entry<String,Object> entry = (Map.Entry<String,Object>) item;
             obj.put(entry.getKey(), entry.getValue());
         }
-        //retornamos el objeto obj, pero llenoxd
+        //retornamos el objeto obj completo
         RESULT = obj; 
     :}
 ;
 
+
+listaValores ::=
+    valor:v MASValores:resto
+    {:
+        //metemos los valores en una lista
+        List<Object> lista = new ArrayList<>();
+        lista.add(v);
+        lista.addAll(resto);
+        RESULT = lista;
+    :}
+  ;
+
+MASValores ::=
+    COMA valor:v MASValores:resto
+    {:
+        //metemos los valores adicionales en una lista
+        List<Object> lista = new ArrayList<>();
+        lista.add(v);
+        lista.addAll(resto);
+        RESULT = lista;
+    :}
+  | /* vacío */
+    {:
+        //si está vacío, no retornamos nada
+        RESULT = new ArrayList<Object>();
+    :}
+  ;
 
 //==============================================PARA DEFINIR LA ACTUALIZACIÓN==============================================
 actualizacion ::=
@@ -337,16 +394,12 @@ actualizacion ::=
     {: 
         System.out.println("Actualización de tabla: " + nombre); 
         //la función de actualizar entra acá
-        List<Map<String,Object>> resultado = gestor.actualizar(nombre, cA.campoFiltro, cA.valorFiltro);
+        List<Map<String,Object>> resultado = gestor.actualizar(nombre, cA.campos, cA.campoFiltro, cA.valorFiltro);
 
-        //mostrar en consola las lecturas para actualizae
+        //mostrar en consola los registros actualizados
         for (Map<String,Object> fila : resultado) {
             System.out.println(fila);
         }
-
-        //guardar el resultado en RESULT para poder usarlo en export
-        RESULT = resultado;
-    
     :}
   ;
 
@@ -354,12 +407,12 @@ cuerpoActualizacion ::=
     seccionCamposActualizar:sca seccionFiltroActualizar:sfa
     {:
         //devolvemos un objeto con campos y filtro
-        RESULT = new actualizacionInfo(sca.campos, sfa.campoFiltro, sfa.valorFiltro); //esta clase se implementará en Clases
+        RESULT = new actualizacionInfo(sca, sfa.campo, sfa.valor);
     :}
   | seccionCamposActualizar:sca
     {:
         //sin filtro para actualizar, devolvemos solo campos
-        RESULT = new actualizacionInfo(sca.campos, null, null);
+        RESULT = new actualizacionInfo(sca, null, null);
     :}
   ;
 
@@ -370,6 +423,7 @@ seccionCamposActualizar ::=
         RESULT = lca;
     :}
   ;
+
 listaCamposActualizar ::=
     campoActualizar:a MASCamposACtualizar:resto
     {:
@@ -382,11 +436,11 @@ listaCamposActualizar ::=
   ;
 
 MASCamposACtualizar ::=
-    COMA campoActualizar:nombre MASCamposACtualizar:resto
+    COMA campoActualizar:c MASCamposACtualizar:resto
     {:
         //metemos los campos que sean necesarios en una lista
-        List<String> lista = new ArrayList<>();
-        lista.add(nombre);
+        List<Map.Entry<String,Object>> lista = new ArrayList<>();
+        lista.add(c);
         lista.addAll(resto);
         RESULT = lista;
     :}
@@ -400,7 +454,7 @@ MASCamposACtualizar ::=
 campoActualizar ::=
     ID:nombre IGUAL_SIMPLE valor:v
     {:
-        //este es un par de tipo campor-valor simple
+        //este es un par de tipo campo-valor simple
         System.out.println("Actualizar campo: " + nombre + " = " + v);
         RESULT = new AbstractMap.SimpleEntry<>(nombre, v);
     :}
@@ -411,18 +465,19 @@ seccionFiltroActualizar ::=
     {:
         //tomamos el filtro a aplicar
         System.out.println("Filtro aplicado: " + e);
-        RESULT = new FiltroInfo(e.campo, e.valor);
+        // expresion retorna Double, se pasa directamente a filtroInfo
+        RESULT = new filtroInfo(null, e);
     :}
   ;
 
 //==============================================PARA DEFINIR LA ELIMINACIÓN DE TODOS LOS REGISTROS DE UNA TABLA==============================================
 eliminacion ::=
     CLEAR ID:nombre PTCOMA
-    {: System.out.println("Eliminación de registros completos en tabla: " + nombre); 
-
-    //Llamamos al gestor para poder limpiar todos los registros de la tabla o rows
-    gestor.limpiarTabla(nombre);
-:}
+    {:
+        System.out.println("Eliminación de registros completos en tabla: " + nombre); 
+        //Llamamos al gestor para poder limpiar todos los registros de la tabla o rows
+        gestor.limpiarTabla(nombre);
+    :}
   ;
 
 
@@ -445,4 +500,3 @@ expresion ::=
   | FALSE                                  {: RESULT = 0.0; :}
   | PARIZQ expresion:a PARDER              {: RESULT = a; :}
   ;
-
