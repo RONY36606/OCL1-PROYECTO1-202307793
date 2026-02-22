@@ -16,6 +16,9 @@ import olc1.proyecto1.pkg202307793.Lexico;
 import olc1.proyecto1.pkg202307793.Sintactico;
 //import de sym, necesario
 import olc1.proyecto1.pkg202307793.sym;
+//importar la fecha y hora para la salida
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 /**
@@ -41,6 +44,10 @@ public class controladorInterfaz {
     }
 
     private void crearNuevoArchivo() {
+        //Tomar la fecha y hora
+            LocalDateTime ahora = LocalDateTime.now();
+            DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            String fechaHora = ahora.format(formato);
         //creamos un archivo dentro de una carpeta
         //chooser será la entidad que creará el cuadro de explorador de archivos
         JFileChooser chooser = new JFileChooser();
@@ -55,15 +62,21 @@ public class controladorInterfaz {
             try {
                 if (archivoActual.createNewFile()) {
                     JOptionPane.showMessageDialog(vista, "Archivo creado: " + archivoActual.getName());
+                    agregarSalida("Archivo eli creado con éxito --->");
                 }
                 vista.entrada_programa.setText(""); // limpiar área de entrada
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(vista, "Error al crear archivo: " + ex.getMessage());
+                agregarSalida("ERROR!¡, no se pudo crear el archivo ---!");
             }
         }
     }
 
     private void guardarArchivo() {
+        //Tomar la fecha y hora
+            LocalDateTime ahora = LocalDateTime.now();
+            DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            String fechaHora = ahora.format(formato);
         //si hay un archivo creado y en uso, se ejecuta el bloque de dentro
         if (archivoActual != null) {
             //si hay algo que guardar
@@ -73,8 +86,10 @@ public class controladorInterfaz {
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(vista, "Error al guardar archivo: " + ex.getMessage());
             }
+            agregarSalida("Archivo eli guardado con éxito --->");
         } else {
             JOptionPane.showMessageDialog(vista, "Primero crea un archivo nuevo.");
+            agregarSalida("ERROR!¡, sin archivo a guardar ---!");
         }
     }
     
@@ -82,6 +97,10 @@ public class controladorInterfaz {
    
 
         private void abrirArchivo() {
+            //Tomar la fecha y hora
+            LocalDateTime ahora = LocalDateTime.now();
+            DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            String fechaHora = ahora.format(formato);
             JFileChooser chooser = new JFileChooser();
             chooser.setDialogTitle("Abrir archivo .eli");
             if (chooser.showOpenDialog(vista) == JFileChooser.APPROVE_OPTION) {
@@ -89,14 +108,20 @@ public class controladorInterfaz {
                 try (BufferedReader br = new BufferedReader(new FileReader(archivoActual))) {
                     vista.entrada_programa.read(br, null);
                     JOptionPane.showMessageDialog(vista, "Archivo cargado: " + archivoActual.getName());
+                    agregarSalida("Archivo eli abierto con éxito --->"+ archivoActual.getName());
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(vista, "Error al abrir archivo: " + ex.getMessage());
+                    agregarSalida("ERROR!¡ No se pudo abrir el archivo ---!");
                 }
             }
         }
         
     //Opción para generar los reportes
       private void EjecutarProgramaYgenerarReportes(){
+          //Tomar la fecha y hora
+            LocalDateTime ahora = LocalDateTime.now();
+            DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            String fechaHora = ahora.format(formato);
           try{
           //tomar el programa fuente
           String entrada = vista.entrada_programa.getText();
@@ -108,6 +133,11 @@ public class controladorInterfaz {
           Sintactico parser = new Sintactico(lexer);
           // Ejecutar el parser (esto dispara las acciones semánticas) 
           parser.parse();
+          //mostrar lo ocurrido en el parser
+          // Mostrar resultados en el output
+            for (String msg : parser.mensajes) {
+                agregarSalida(msg);
+            }
           //mostrar los errores sintácticos, si es que hay
             if (!parser.erroresSintacticos.isEmpty()) {
                 StringBuilder sb = new StringBuilder("Será imposible exportar la base de datos o consultas, ya que hay errores sintácticos encontrados:\n\n");
@@ -116,6 +146,7 @@ public class controladorInterfaz {
                 }
                 JOptionPane.showMessageDialog(vista, sb.toString(), 
                     "Errores Sintácticos", JOptionPane.ERROR_MESSAGE);
+                agregarSalida("Errores sintácticos presentes ---!");
             }
           //Iterar los tokens
           while (lexer.next_token().sym != sym.EOF){
@@ -143,12 +174,23 @@ public class controladorInterfaz {
               contador++;
           }
           JOptionPane.showMessageDialog(vista, "Archivo ejecutado :)");
-          vista.entrada_programa.setText(vista.entrada_programa.getText()+"\n"+"Archivo eli ejecutado con éxito --->");
+          agregarSalida("Archivo eli ejecutado con éxito --->");
           }catch(Exception ex){
               JOptionPane.showMessageDialog(vista, "Error en el análisis léxico :( : " + ex.getMessage());
+              agregarSalida("Error en el análisis léxico ---!");
           }
           
       }
+      
+      //FUNCIÓN PARA LAS SALIDAS DEL OUTPUT
+      private void agregarSalida(String mensaje) {
+    LocalDateTime ahora = LocalDateTime.now();
+    String fechaHora = ahora.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+    vista.salida_programa.setText(
+        vista.salida_programa.getText() + "\n" + 
+        "[" + fechaHora + "]: " + mensaje
+    );
+}
 
 
 

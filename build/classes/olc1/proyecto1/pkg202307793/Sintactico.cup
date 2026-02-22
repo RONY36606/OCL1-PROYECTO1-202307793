@@ -34,6 +34,10 @@ parser code {:
     public void report_fatal_error(String message, Object info) {
         report_error(message, info);
     }
+
+
+     //Códgio para tener en cuenta las funciones que realizamos
+        public java.util.LinkedList<String> mensajes = new java.util.LinkedList<>();
 :}
 
 /* ================= TERMINALES ================= */
@@ -129,6 +133,7 @@ definicionDB ::=
     {:
         gestor.crearBaseDeDatos(nombre, s);
         System.out.println("Definición de base de datos: " + nombre);
+        parser.mensajes.add("Definición de BD: " + nombre);
     :}
 ;
 
@@ -138,6 +143,7 @@ storeDecl ::=
     STORE AT STRING_LITERAL:ruta PTCOMA
     {:
         System.out.println("Ruta de persistencia: " + ruta);
+        parser.mensajes.add("Ruta de la BD: " + ruta);
         //para crear la ruta
         RESULT = ruta;
     :}
@@ -147,7 +153,8 @@ storeDecl ::=
 instruccionUse ::=
     USE ID:nombre PTCOMA
     {: 
-        System.out.println("Usando base de datos: " + nombre); 
+        System.out.println("Usando base de datos: " + nombre);
+        parser.mensajes.add("Usando base de datos: " + nombre); 
         //para crear la instrucción de use
         gestor.usarBaseDeDatos(nombre);
     :}
@@ -158,6 +165,7 @@ definicionTabla ::=
     TABLE ID:nombre LLAIZQ listaCamposTabla:campos LLADER
     {:
         System.out.println("Definición de tabla: " + nombre);
+        parser.mensajes.add("Definición de tabla: " + nombre); 
         gestor.crearTabla(nombre, campos);
     :}
 ;
@@ -183,6 +191,7 @@ campo ::=
     ID:nombre DOSPUNTOS tipoDato:td PTCOMA
     {:
         System.out.println("Campo: " + nombre + " Tipo: " + td);
+        parser.mensajes.add("Campo: " + nombre + " Tipo: " + td); 
         RESULT = new AbstractMap.SimpleEntry<>(nombre, td);
     :}
 ;
@@ -203,6 +212,7 @@ lectura ::=
     READ ID:nombre LLAIZQ cuerpoLectura:cl LLADER PTCOMA
     {: 
         System.out.println("Lectura de tabla: " + nombre); 
+        parser.mensajes.add("Lectura de tabla: " + nombre); 
         //la función de lectura entra acá
         List<Map<String,Object>> resultado = gestor.leer(nombre, cl.campos, cl.campoFiltro, cl.operador, cl.valorFiltro);
 
@@ -231,6 +241,7 @@ seccionCampos ::=
     FIELDS DOSPUNTOS listaCamposRead:lc PTCOMA
     {:
         System.out.println("Campos seleccionados: " + lc);
+        parser.mensajes.add("Campos seleccionados: " + lc); 
         RESULT = new camposInfo(lc);
     :}
   ;
@@ -281,7 +292,8 @@ seccionFiltroRead ::=
 exportacion ::=
     EXPORT STRING_LITERAL:nombreArchivo PTCOMA
     {:
-        System.out.println("exportación de BD: " + nombreArchivo); 
+        System.out.println("exportación de BD: " + nombreArchivo);
+        parser.mensajes.add("Exportación de BD: " + nombreArchivo);  
         //exportamos usando la última lectura guardada en el gestor
         gestor.exportar(nombreArchivo);
     :}
@@ -292,6 +304,7 @@ insercion ::=
     ADD ID:nombre LLAIZQ listaAsignaciones:campos LLADER PTCOMA
     {: 
         System.out.println("Agregar registro: " + nombre);
+        parser.mensajes.add("Agregar registro: " + nombre);  
         // Creamos un mapa para la fila, para ver los valores que entran en determinada fila
         Map<String,Object> fila = new HashMap<>();
         for (Object obj : campos) {
@@ -395,6 +408,7 @@ actualizacion ::=
     UPDATE ID:nombre LLAIZQ cuerpoActualizacion:cA LLADER PTCOMA
     {: 
         System.out.println("Actualización de tabla: " + nombre); 
+        parser.mensajes.add("Actualización de la tabla: " + nombre);  
         //la función de actualizar entra acá
         List<Map<String,Object>> resultado = gestor.actualizar(nombre, cA.campos, cA.campoFiltro, cA.valorFiltro);
 
@@ -452,6 +466,7 @@ campoActualizar ::=
     {:
         //este es un par de tipo campo-valor simple
         System.out.println("Actualizar campo: " + nombre + " = " + v);
+        parser.mensajes.add("Actualizar campo: " + nombre + " = " + v);  
         RESULT = new AbstractMap.SimpleEntry<>(nombre, v);
     :}
   ;
@@ -475,7 +490,8 @@ seccionFiltroActualizar ::=
 eliminacion ::=
     CLEAR ID:nombre PTCOMA
     {:
-        System.out.println("Eliminación de registros completos en tabla: " + nombre); 
+        System.out.println("Eliminación de registros completos en tabla: " + nombre);
+        parser.mensajes.add("Eliminación de registros completos en tabla: " + nombre); 
         //Llamamos al gestor para poder limpiar todos los registros de la tabla o rows
         gestor.limpiarTabla(nombre);
     :}

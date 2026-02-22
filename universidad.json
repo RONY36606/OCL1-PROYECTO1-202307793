@@ -1,1 +1,1 @@
-{"nombre":"universidad","filePath":"universidad.json","tablas":{"profesores":{"name":"profesores","rows":[{"salario":1500.5,"departamento":"Matemáticas","id":1,"nombre":"Carlos"}],"columnas":[{},{},{},{}]},"estudiantes":{"name":"estudiantes","rows":[],"columnas":[{},{},{}]}}}
+{"database":"universidad","tables":{"profesores":{"schema":{"id":"int","nombre":"string","salario":"float","departamento":"string"},"records":[{"salario":1500.5,"departamento":"Matemáticas","id":1,"nombre":"Carlos"}]},"estudiantes":{"schema":{"id":"int","nombre":"string","edad":"int"},"records":[]}}}

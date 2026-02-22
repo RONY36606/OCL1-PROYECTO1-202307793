@@ -208,8 +208,39 @@ public class gestorBD {
 
     // Guardar base de datos completa en JSON, siempre ir refrescando
     private void guardar(dataBase db) {
+        String nombreLimpio = db.filePath.replace("\"", "");
+        //para darle forma al json, se debe de crear un objeto db, contendrá todo lo demás
+        Map<String, Object> dbObj = new LinkedHashMap<>();
+        dbObj.put("database", db.nombre);
+        //luego siguen las tablas, esta es una lista de tablas
+        Map<String, Object> tables = new LinkedHashMap<>();
+        //hay que meterle info a las tablas
+                for (Map.Entry<String, Tabla> entry : db.tablas.entrySet()) {
+                    //t es la variable iteradora
+                Tabla t = entry.getValue();
+
+                // schema con los tipos
+                Map<String, String> schema = new LinkedHashMap<>();
+                for (Map.Entry<String, String> col : t.columnas) {
+                    schema.put(col.getKey(), col.getValue());//para sacar la info de las columnas para hacer el schema
+                    //sería algo tipo 'campo' y su valor , pues es su tipo
+                }
+                
+                //creamos el objeto tabla
+                Map<String, Object> tablaObj = new LinkedHashMap<>();
+                //metemos la info del esquema y los registros
+                tablaObj.put("schema", schema);
+                tablaObj.put("records", t.rows);
+
+                tables.put(t.name, tablaObj);
+            }
+                //ahora metemos la lista de tabla dentro de nuestra base de datos
+                dbObj.put("tables", tables);
+                
         try (FileWriter writer = new FileWriter(db.filePath)) {
-            gson.toJson(db, writer); //convertimos la base de datos completa a JSON
+            //
+            new Gson().toJson(dbObj, writer);//usamos esto para serializar el NUEVO objeto de la db, el viejo tira otra estructura
+            //gson.toJson(db, writer); //convertimos la base de datos completa a JSON
         } catch (IOException e) {
             e.printStackTrace();
         }
