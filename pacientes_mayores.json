@@ -1,1 +1,1 @@
-[{"enfermedad":"\"Gripe\"","id":"1","nombre":"\"Juan\"","edad":"45"}]
+{"table":"pacientes","fields":{"nombre":"string","enfermedad":"string","edad":"int"},"records":[{"nombre":"Juan","enfermedad":"Gripe","edad":45}]}

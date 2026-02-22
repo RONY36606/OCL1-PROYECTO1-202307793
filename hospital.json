@@ -1,1 +1,1 @@
-{"nombre":"hospital","filePath":"hospital.json","tablas":{"pacientes":{"name":"pacientes","rows":[{"enfermedad":"\"Gripe\"","id":"1","nombre":"\"Juan\"","edad":"45"},{"enfermedad":"\"Neumonía\"","id":"2","nombre":"\"Pedro\"","edad":"38"}],"columnas":[{},{},{},{}]}}}
+{"nombre":"hospital","filePath":"hospital.json","tablas":{"pacientes":{"name":"pacientes","rows":[{"enfermedad":"Gripe","id":1,"nombre":"Juan","edad":45},{"enfermedad":"Neumonía","id":2,"nombre":"Pedro","edad":38}],"columnas":[{},{},{},{}]}}}

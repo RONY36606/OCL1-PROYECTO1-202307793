@@ -79,12 +79,7 @@ CADENA  = \"([^\"\\]|\\.)*\"
 }
 
 // ================= PALABRAS RESERVADAS =================
-"Evaluar" {
-    token t = new token("REVALUAR", yytext(), (int)yyline, (int)yychar);
-    listaTokens.add(t);
-    System.out.println("Palabra reservada reconocida: " + yyline +  " - " + yychar + " ->> " +  yytext());
-    return new Symbol(sym.REVALUAR, (int)yyline, (int)yychar+1, yytext()); 
-}
+
 
 "int" {
     token t = new token("INT", yytext(), (int)yyline, (int)yychar);

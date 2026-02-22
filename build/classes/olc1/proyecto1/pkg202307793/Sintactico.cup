@@ -45,7 +45,6 @@ terminal String TRUE, FALSE;
 terminal String INT, FLOAT, BOOL, STRING, ARRAY, OBJECT, NULL;
 terminal String DATABASE, USE, TABLE, READ, FIELDS, FILTER, STORE, AT, EXPORT;
 terminal String ADD, UPDATE, SET, CLEAR;
-terminal String REVALUAR;
 terminal String COMA, DOSPUNTOS, IGUAL_SIMPLE;
 
 
@@ -205,7 +204,7 @@ lectura ::=
     {: 
         System.out.println("Lectura de tabla: " + nombre); 
         //la función de lectura entra acá
-        List<Map<String,Object>> resultado = gestor.leer(nombre, cl.campoFiltro, cl.valorFiltro);
+        List<Map<String,Object>> resultado = gestor.leer(nombre, cl.campos, cl.campoFiltro, cl.operador, cl.valorFiltro);
 
         //mostrar en consola las lecturas
         for (Map<String,Object> fila : resultado) {
@@ -220,13 +219,11 @@ lectura ::=
 cuerpoLectura ::=
     seccionCampos:sc seccionFiltroRead:sf
     {:
-        //devolvemos un objeto con campos y filtro
-        RESULT = new lecturaInfo(sc.campos, sf.campo, sf.valor);
+        RESULT = new lecturaInfo(sc.campos, sf.campo, sf.operador, sf.valor);
     :}
   | seccionCampos:sc
     {:
-        //sin filtro, devolvemos solo campos
-        RESULT = new lecturaInfo(sc.campos, null, null);
+        RESULT = new lecturaInfo(sc.campos, null, null, null);
     :}
   ;
 
@@ -266,13 +263,18 @@ MASCampos ::=
   ;
 
 seccionFiltroRead ::=
-    FILTER DOSPUNTOS expresion:e PTCOMA
-    {:
-        //tomamos el filtro a aplicar
-        System.out.println("Filtro aplicado: " + e);
-        // expresion retorna Double, se pasa directamente a filtroInfo
-        RESULT = new filtroInfo(null, e);
-    :}
+    FILTER DOSPUNTOS ID:campo IGUAL      valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "==", v); :}
+  | FILTER DOSPUNTOS ID:campo DIFERENTE  valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "!=", v); :}
+  | FILTER DOSPUNTOS ID:campo MAYOR      valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, ">", v); :}
+  | FILTER DOSPUNTOS ID:campo MENOR      valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "<", v); :}
+  | FILTER DOSPUNTOS ID:campo MAYORIGUAL valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, ">=", v); :}
+  | FILTER DOSPUNTOS ID:campo MENORIGUAL valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "<=", v); :}
   ;
 
 //====================================PARA DEFINIR LAS EXPORT==============================================
@@ -405,15 +407,9 @@ actualizacion ::=
 
 cuerpoActualizacion ::=
     seccionCamposActualizar:sca seccionFiltroActualizar:sfa
-    {:
-        //devolvemos un objeto con campos y filtro
-        RESULT = new actualizacionInfo(sca, sfa.campo, sfa.valor);
-    :}
+    {: RESULT = new actualizacionInfo(sca, sfa.campo, sfa.operador, sfa.valor); :}
   | seccionCamposActualizar:sca
-    {:
-        //sin filtro para actualizar, devolvemos solo campos
-        RESULT = new actualizacionInfo(sca, null, null);
-    :}
+    {: RESULT = new actualizacionInfo(sca, null, null, null); :}
   ;
 
 seccionCamposActualizar ::=
@@ -461,13 +457,18 @@ campoActualizar ::=
   ;
 
 seccionFiltroActualizar ::=
-    FILTER DOSPUNTOS expresion:e PTCOMA
-    {:
-        //tomamos el filtro a aplicar
-        System.out.println("Filtro aplicado: " + e);
-        // expresion retorna Double, se pasa directamente a filtroInfo
-        RESULT = new filtroInfo(null, e);
-    :}
+    FILTER DOSPUNTOS ID:campo IGUAL      valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "==", v); :}
+  | FILTER DOSPUNTOS ID:campo DIFERENTE  valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "!=", v); :}
+  | FILTER DOSPUNTOS ID:campo MAYOR      valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, ">", v); :}
+  | FILTER DOSPUNTOS ID:campo MENOR      valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "<", v); :}
+  | FILTER DOSPUNTOS ID:campo MAYORIGUAL valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, ">=", v); :}
+  | FILTER DOSPUNTOS ID:campo MENORIGUAL valor:v PTCOMA
+    {: RESULT = new filtroInfo(campo, "<=", v); :}
   ;
 
 //==============================================PARA DEFINIR LA ELIMINACIÓN DE TODOS LOS REGISTROS DE UNA TABLA==============================================
@@ -481,22 +482,5 @@ eliminacion ::=
   ;
 
 
-/* ================= EXPRESIONES ================= */
-expresion ::=
-    expresion:a IGUAL       expresion:b   {: RESULT = (a.equals(b)) ? 1.0 : 0.0; :}
-  | expresion:a DIFERENTE   expresion:b   {: RESULT = (!a.equals(b)) ? 1.0 : 0.0; :}
-  | expresion:a MAYOR       expresion:b   {: RESULT = (a > b) ? 1.0 : 0.0; :}
-  | expresion:a MENOR       expresion:b   {: RESULT = (a < b) ? 1.0 : 0.0; :}
-  | expresion:a MAYORIGUAL  expresion:b   {: RESULT = (a >= b) ? 1.0 : 0.0; :}
-  | expresion:a MENORIGUAL  expresion:b   {: RESULT = (a <= b) ? 1.0 : 0.0; :}
-  | expresion:a AND         expresion:b   {: RESULT = ((a==1.0 && b==1.0)?1.0:0.0); :}
-  | expresion:a OR          expresion:b   {: RESULT = ((a==1.0 || b==1.0)?1.0:0.0); :}
-  | NOT expresion:a                        {: RESULT = (a==1.0)?0.0:1.0; :}
-  | ENTERO:a                               {: RESULT = Double.parseDouble(a); :}
-  | DECIMAL:a                              {: RESULT = Double.parseDouble(a); :}
-  | ID:a                                   {: RESULT = 0.0; /* aquí podrías manejar variables */ :}
-  | STRING_LITERAL:a                       {: RESULT = 0.0; /* cadenas no se evalúan numéricamente */ :}
-  | TRUE                                   {: RESULT = 1.0; :}
-  | FALSE                                  {: RESULT = 0.0; :}
-  | PARIZQ expresion:a PARDER              {: RESULT = a; :}
-  ;
+
+  

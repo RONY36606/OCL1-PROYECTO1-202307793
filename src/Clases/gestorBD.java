@@ -20,6 +20,9 @@ public class gestorBD {
     private Gson gson = new Gson();
     //ultimo read visto
     private List<Map<String,Object>> ultimaLectura = new ArrayList<>();
+    // Variables de contexto para export, para incluír el esquema y nombre de la tabla
+    private String ultimaTablaLeida = "";
+    private List<String> ultimosCamposLeidos = new ArrayList<>();
     //geter
     public List<Map<String,Object>> getUltimaLectura() {
             return ultimaLectura;
@@ -55,34 +58,81 @@ public class gestorBD {
     public void insertarRegistro(String nombreTabla, Map<String,Object> fila) {
         Tabla t = baseActual.tablas.get(nombreTabla);
         if (t != null) {
-            // Limpiar comillas de todos los valores string
-            Map<String,Object> filaLimpia = new HashMap<>();
-            for (Map.Entry<String,Object> entry : fila.entrySet()) {
-                Object valor = entry.getValue();
-                if (valor instanceof String) {
-                    valor = ((String) valor).replace("\"", "");
-                }
-                filaLimpia.put(entry.getKey(), valor);
+            Map<String,Object> filaLimpia = new LinkedHashMap<>();
+        for (Map.Entry<String,Object> entry : fila.entrySet()) {
+            String campo = entry.getKey();
+            Object valor = entry.getValue();
+            // Buscar el tipo del campo en el schema
+            String tipo = obtenerTipo(t, campo);
+            if (tipo != null) {
+                if (tipo.equals("int")) valor = Integer.parseInt(valor.toString());
+                else if (tipo.equals("float")) valor = Double.parseDouble(valor.toString());
+                else if (valor instanceof String) valor = ((String)valor).replace("\"", "");
             }
-            t.rows.add(filaLimpia); //si la tabla existe, le podemos añadir la fila nueva con el registro
-            guardar(baseActual);//SIEMPRE, guardamos los cambios
+            filaLimpia.put(campo, valor);
+        }
+        t.rows.add(filaLimpia);
+        guardar(baseActual);
         }
     }
-
+    //=========================0FUNCIÓN AUXILIAR PARA VERIFICAR EL TIPO DE DATO=================0
+    private String obtenerTipo(Tabla t, String campo) {
+    for (Map.Entry<String,String> col : t.columnas) {
+        if (col.getKey().equals(campo)) return col.getValue();
+    }
+    return null;
+}
     // Leer registros con filtro
-    public List<Map<String,Object>> leer(String nombreTabla, String campoFiltro, Object valorFiltro) {
+    public List<Map<String,Object>> leer(String nombreTabla, List<String> campos, String campoFiltro, String operador, Object valorFiltro) {
         Tabla t = baseActual.tablas.get(nombreTabla);//siempre tomamos la tabla antes de hacerle más de algo
         List<Map<String,Object>> resultado = new ArrayList<>(); //creamos un resultado para insertar en la tabla después
         if (t != null) {
             for (Map<String,Object> fila : t.rows) {//vamos recorriendo las filas
-                if (campoFiltro == null || fila.get(campoFiltro).equals(valorFiltro)) {
-                    resultado.add(fila);
+                if (campoFiltro == null || evaluarFiltro(fila, campoFiltro, operador, valorFiltro)) {
+                // Solo incluir los campos seleccionados
+                Map<String,Object> filaFiltrada = new LinkedHashMap<>();
+                for (String campo : campos) {
+                    filaFiltrada.put(campo, fila.get(campo));
                 }
+                resultado.add(filaFiltrada);
+            }
             }
         }
+        //guardamos la última información obtenida
+        ultimaTablaLeida = nombreTabla;
+        ultimosCamposLeidos = campos;
         ultimaLectura = resultado;
         return resultado;
     }
+    
+    //Esta función sirve para valiar las expresiones de los filtros que crearemos
+    private boolean evaluarFiltro(Map<String,Object> fila, String campo, 
+                               String operador, Object valor) {
+    Object val = fila.get(campo);
+    if (val == null) return false;
+    
+    try {
+        double v1 = Double.parseDouble(val.toString());
+        double v2 = Double.parseDouble(valor.toString());
+        switch (operador) {
+            case "==": return v1 == v2;
+            case "!=": return v1 != v2;
+            case ">":  return v1 > v2;
+            case "<":  return v1 < v2;
+            case ">=": return v1 >= v2;
+            case "<=": return v1 <= v2;
+        }
+    } catch (NumberFormatException e) {
+        // Comparación de strings
+        String s1 = val.toString().replace("\"", "");
+        String s2 = valor.toString().replace("\"", "");
+        switch (operador) {
+            case "==": return s1.equals(s2);
+            case "!=": return !s1.equals(s2);
+        }
+    }
+    return false;
+}
 
     // Actualizar registros
     public List<Map<String,Object>> actualizar(String nombreTabla, List<Map.Entry<String,Object>> campos, String campoFiltro, Object valorFiltro) {
@@ -113,19 +163,47 @@ public class gestorBD {
         }
     }
 
-    // Exportar resultados o consultas
-    public void exportar(String nombreArchivo, List<Map<String,Object>> datos) {
-        String nombreLimpio = nombreArchivo.replace("\"", "");
-        try (FileWriter writer = new FileWriter(nombreArchivo)) {
-            gson.toJson(datos, writer); //convertimos la lista de resultados a JSON
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    
     //Exportar sin datos
     public void exportar(String nombreArchivo) {
         String nombreLimpio = nombreArchivo.replace("\"", "");
-        exportar(nombreLimpio, ultimaLectura);
+        Tabla t = baseActual.tablas.get(ultimaTablaLeida);
+        if (t == null) {
+            System.err.println("Error: no hay lectura previa para exportar");
+            return;
+        }
+        
+        // Construir objeto de exportación con la estructura correcta
+        Map<String, Object> exportObj = new LinkedHashMap<>();
+        exportObj.put("table", ultimaTablaLeida);
+
+        // campos con sus tipos desde el esquema de la tabla
+        Map<String, String> fields = new LinkedHashMap<>();
+        for (String campo : ultimosCamposLeidos) {
+            String tipo = obtenerTipo(t, campo);
+            fields.put(campo, tipo != null ? tipo : "string");
+        }
+        exportObj.put("fields", fields);
+        
+        //ahora toca meter lo de los records
+        // solo los campos seleccionados en cada registro
+        List<Map<String,Object>> recordsFiltrados = new ArrayList<>();
+        for (Map<String,Object> registro : ultimaLectura) {
+            Map<String,Object> r = new LinkedHashMap<>(); //un diccionario auxiliar para meter los compos que han sido leídos
+            for (String campo : ultimosCamposLeidos) {
+                r.put(campo, registro.get(campo));
+            }
+            recordsFiltrados.add(r);
+        }
+        exportObj.put("records", recordsFiltrados);
+        
+        try (FileWriter writer = new FileWriter(nombreLimpio)) {
+        new Gson().toJson(exportObj, writer);
+        System.out.println("Exportación exitosa: " + nombreLimpio);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
     }
 
     // Guardar base de datos completa en JSON, siempre ir refrescando
