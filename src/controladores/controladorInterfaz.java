@@ -32,6 +32,7 @@ public class controladorInterfaz {
 
     public controladorInterfaz(interfazInicial vista) {
         this.vista = vista;
+        Sintactico.gestor.cargarTodasLasBases();//solo se ejecutará 1 vez
         inicializarEventos();
     }
 
@@ -41,6 +42,7 @@ public class controladorInterfaz {
         vista.guardar_archivo_btn.addActionListener(e -> guardarArchivo());
         vista.abrir_archivo_btn.addActionListener(e -> abrirArchivo());
         vista.ejecutar_btn.addActionListener(e -> EjecutarProgramaYgenerarReportes());
+        
     }
 
     private void crearNuevoArchivo() {

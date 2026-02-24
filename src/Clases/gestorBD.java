@@ -245,6 +245,91 @@ public class gestorBD {
             e.printStackTrace();
         }
     }
+    
+    
+    //Método para cargar una base de datos antigua desde el Json
+    //usando la librería GSon, pero al inverso xd
+    public void cargarBaseDeDatos(String rutaArchivo){
+        try{
+                String nombreLimpio = rutaArchivo.replace("\"", "");
+                java.io.File archivo = new java.io.File(nombreLimpio); //primero, encontramos el archivo
+                if (!archivo.exists()) return;//si no hay, pues gg
+                
+                // Leer el JSON
+                String contenido = new String(java.nio.file.Files.readAllBytes(archivo.toPath()));
+                com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(contenido).getAsJsonObject();
+                // Verificar que es un JSON de base de datos y no de exportación
+                if (!root.has("database") || !root.has("tables")) {
+                    System.out.println("Saltando " + nombreLimpio + " - no es una base de datos");
+                    return;
+                }
+                
+                //creamos el objeto de la bd
+                String nombreDB = root.get("database").getAsString();
+                
+                //ahora vamos a crear las tablas
+                dataBase db = new dataBase(nombreDB, nombreLimpio);
+                //meter la db a nuestra lista de db
+                bases.put(nombreDB, db);
+                
+                
+                //vamos a reconstruir las tablas, tomando los tables  
+                com.google.gson.JsonObject tables = root.getAsJsonObject("tables");
+                for (Map.Entry<String, com.google.gson.JsonElement> tablaEntry : tables.entrySet()) {
+                    String nombreTabla = tablaEntry.getKey();
+                    Tabla t = new Tabla(nombreTabla);
+
+                    com.google.gson.JsonObject tablaObj = tablaEntry.getValue().getAsJsonObject();
+
+                    // Reconstruir el schema
+                    com.google.gson.JsonObject schema = tablaObj.getAsJsonObject("schema");
+                    for (Map.Entry<String, com.google.gson.JsonElement> col : schema.entrySet()) {
+                        t.agregarColumna(col.getKey(), col.getValue().getAsString()); //agregamos la columna del objeto schema
+                    }
+
+                    // Reconstruir los records
+                    com.google.gson.JsonArray records = tablaObj.getAsJsonArray("records");
+                    for (com.google.gson.JsonElement rec : records) {
+                        Map<String, Object> fila = new LinkedHashMap<>();
+                        com.google.gson.JsonObject recObj = rec.getAsJsonObject(); //tomamos la info acá dentro
+                        for (Map.Entry<String, com.google.gson.JsonElement> campo : recObj.entrySet()) {
+                            com.google.gson.JsonElement val = campo.getValue(); //tomamos los valores dentro de la línea
+                            if (val.isJsonPrimitive()) {
+                                com.google.gson.JsonPrimitive prim = val.getAsJsonPrimitive();
+                                if (prim.isNumber()) {
+                                    // Distinguir int de float, hay que poner los datos númpericos
+                                    String tipo = obtenerTipo(t, campo.getKey());
+                                    if ("int".equals(tipo)) fila.put(campo.getKey(), prim.getAsInt());
+                                    else fila.put(campo.getKey(), prim.getAsDouble());
+                                } else {
+                                    fila.put(campo.getKey(), prim.getAsString());
+                                }
+                            }
+                        }
+                        t.rows.add(fila);
+                    }
+
+                    db.tablas.put(nombreTabla, t); //metemos la tabla que hemos recorrido
+                }
+                 System.out.println("Base de datos cargada con éxito :D: " + nombreDB);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    
+    //para poder meter todas la estrcuturas necesarias
+    public void cargarTodasLasBases(){
+        java.io.File directorio = new java.io.File(".");
+        java.io.File[] archivos = directorio.listFiles(
+            (dir, name) -> name.endsWith(".json") // solo buscaremos json   
+        );
+        if (archivos != null) {
+            for (java.io.File archivo : archivos) {
+                cargarBaseDeDatos(archivo.getName());
+            }
+        } 
+    }
 }
 
 
