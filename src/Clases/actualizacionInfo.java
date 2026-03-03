@@ -13,10 +13,9 @@ import java.util.Map;
  */
 public class actualizacionInfo {
     public List<Map.Entry<String,Object>> campos;
-    public String campoFiltro; 
-    public String operador;
-    public Object valorFiltro; 
-    public actualizacionInfo(List<Map.Entry<String,Object>> campos, String campoFiltro,String operador, Object valorFiltro) 
-    { this.campos = campos; this.campoFiltro = campoFiltro; this.valorFiltro = valorFiltro; this.operador = operador;
+    public expresionFiltro expresion;
+    public actualizacionInfo(List<Map.Entry<String,Object>> campos, expresionFiltro expresion) {
+        this.campos = campos;
+        this.expresion = expresion;
     }
 }

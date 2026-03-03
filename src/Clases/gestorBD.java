@@ -81,14 +81,33 @@ public class gestorBD {
         if (col.getKey().equals(campo)) return col.getValue();
     }
     return null;
+    
+    
 }
+    
+    
+    //esto es para las expresiones compuestas
+    private boolean evaluarExpresion(Map<String,Object> fila, expresionFiltro exp) {
+    if (exp.esNegacion) {
+        return !evaluarExpresion(fila, exp.izquierda);
+    }
+    if (exp.esCompuesta) {
+        boolean izq = evaluarExpresion(fila, exp.izquierda);
+        boolean der = evaluarExpresion(fila, exp.derecha);
+        if ("&&".equals(exp.operadorLogico)) return izq && der;
+        if ("||".equals(exp.operadorLogico)) return izq || der;
+    }
+    // Expresión simple
+    return evaluarFiltro(fila, exp.campo, exp.operador, exp.valor);
+}
+    
     // Leer registros con filtro
-    public List<Map<String,Object>> leer(String nombreTabla, List<String> campos, String campoFiltro, String operador, Object valorFiltro) {
-        Tabla t = baseActual.tablas.get(nombreTabla);//siempre tomamos la tabla antes de hacerle más de algo
-        List<Map<String,Object>> resultado = new ArrayList<>(); //creamos un resultado para insertar en la tabla después
-        if (t != null) {
-            for (Map<String,Object> fila : t.rows) {//vamos recorriendo las filas
-                if (campoFiltro == null || evaluarFiltro(fila, campoFiltro, operador, valorFiltro)) {
+    public List<Map<String,Object>> leer(String nombreTabla, List<String> campos, expresionFiltro filtro) {
+    Tabla t = baseActual.tablas.get(nombreTabla);//siempre tomamos la tabla antes de hacerle más de algo
+    List<Map<String,Object>> resultado = new ArrayList<>();//creamos un resultado para insertar en la tabla después
+    if (t != null) {
+        for (Map<String,Object> fila : t.rows) {//vamos recorriendo las filas
+            if (filtro == null || evaluarExpresion(fila, filtro)) {
                 // Solo incluir los campos seleccionados
                 Map<String,Object> filaFiltrada = new LinkedHashMap<>();
                 for (String campo : campos) {
@@ -96,14 +115,14 @@ public class gestorBD {
                 }
                 resultado.add(filaFiltrada);
             }
-            }
         }
-        //guardamos la última información obtenida
-        ultimaTablaLeida = nombreTabla;
-        ultimosCamposLeidos = campos;
-        ultimaLectura = resultado;
-        return resultado;
     }
+    //guardamos la última información obtenida
+    ultimaTablaLeida = nombreTabla;
+    ultimosCamposLeidos = campos;
+    ultimaLectura = resultado;
+    return resultado;
+}
     
     //Esta función sirve para valiar las expresiones de los filtros que crearemos
     private boolean evaluarFiltro(Map<String,Object> fila, String campo, 
@@ -135,12 +154,12 @@ public class gestorBD {
 }
 
     // Actualizar registros
-    public List<Map<String,Object>> actualizar(String nombreTabla, List<Map.Entry<String,Object>> campos, String campoFiltro, Object valorFiltro) {
+    public List<Map<String,Object>> actualizar(String nombreTabla, List<Map.Entry<String,Object>> campos, expresionFiltro filtro) {
     Tabla t = baseActual.tablas.get(nombreTabla);
     List<Map<String,Object>> resultado = new ArrayList<>();
     if (t != null) {
         for (Map<String,Object> fila : t.rows) {
-            if (campoFiltro == null || fila.get(campoFiltro).equals(valorFiltro)) { //varifcamos que la línea a manipular sea la correcta
+            if (filtro == null || evaluarExpresion(fila, filtro)) {//varifcamos que la línea a manipular sea la correcta
                 // aplicar actualizaciones
                 for (Map.Entry<String,Object> entry : campos) {
                     fila.put(entry.getKey(), entry.getValue());
@@ -152,6 +171,7 @@ public class gestorBD {
     }
     return resultado;
 }
+   
 
 
     // Limpiar tabla

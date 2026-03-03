@@ -11,13 +11,11 @@ import java.util.List;
  * @author Rony
  */
 public class lecturaInfo {
+    
+    public expresionFiltro expresion;
     public List<String> campos; //campos seleccionados 
-    public String campoFiltro; //campo usado en el filtro 
-    public String operador;
-    public Object valorFiltro; //valor del filtro 
-    public lecturaInfo(List<String> campos, String campoFiltro, String operador, Object valorFiltro) { 
+    public lecturaInfo(List<String> campos, expresionFiltro expresion) { 
         this.campos = campos; 
-        this.campoFiltro = campoFiltro; 
-        this.operador = operador;
-        this.valorFiltro = valorFiltro; }
+        this.expresion = expresion; 
+    }
 }
